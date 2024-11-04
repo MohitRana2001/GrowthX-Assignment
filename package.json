@@ -1,0 +1,19 @@
+{
+  "name": "growthx",
+  "version": "1.0.0",
+  "description": "backend application to manage assignments between admin and users",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohitRana2001/GrowthX-Assignment.git"
+  },
+  "author": "Mohit Rana",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MohitRana2001/GrowthX-Assignment/issues"
+  },
+  "homepage": "https://github.com/MohitRana2001/GrowthX-Assignment#readme"
+}
