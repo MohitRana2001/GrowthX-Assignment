@@ -1,76 +1,54 @@
 const express = require('express');
-const { body , validationResult} = require('express-validator');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { registerSchema, loginSchema } = require('../validation/schemas');
 const router = express.Router();
+require('dotenv').config();
 
-router.post('/register', 
-    [
-        body('username').trim().isLength({min: 3}),
-        body('password').isLength({ min: 6}),
-        body('role').isIn(['user', 'admin']),
-    ],
-    async ( req, res) => {
-        try {
-            const errors = validationResult(req);
-            if(!errors.isEmpty()){
-            return res.status(400).json({errors : errors.array()});
-        }
-
-        const { username , password, role} = req.body;
-        const existingUser = await User.findOne({ username});
-
-        if(existingUser) {
-            return res.status(400).json({ message : 'Username already exists'});
-        }
-
-        const user = new User({ username , password, role});
-        await user.save();
-
-        const token = jwt.sign(
-            { userId: user._id},
-            process.env.JWT_SECRET || 'my-secret-key',
-            { expiresIn: '24h'}
-        );
-
-        res.status(201).json({token, role : user.role});
-    } catch (error) {
-        res.status(500).json({message : 'Server error'});
+router.post('/register', async (req, res) => {
+  try {
+    const { success } = registerSchema.safeParse(req.body);
+    if (!success) {
+      return res.status(400).json({ error: 'Invalid input' });
     }
 
+    const { username, password, isAdmin } = req.body;
+    const existingUser = await User.findOne({ username });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
     }
-);
 
-router.post('/login', [
-    body('username').trim().notEmpty(),
-    body('password').notEmpty(),
-],
-    async ( req, res) => {
-        try {
-            const errors = validationResult(req);
-            if(!errors.isEmpty()) {
-                return res.status(400).json({errors : errors.array()});
-            }
+    const user = new User({ username, password, isAdmin });
+    await user.save();
 
-            const { username , password } = req.body;
-            const user = await User.findOne({ username });
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
 
-            if(!user || !(await user.comparePassword(password))) {
-                return res.status(401).json({ message : 'Invalid Credentials'});
-            }
-
-            const token = jwt.sign(
-                { userId: user._id},
-                process.env.JWT_SCERET || 'my-sceret-key',
-                { expiresIn: '24h'}
-            );
-
-            res.json({ token, role: user.role});
-        } catch ( error ) {
-            res.status(500).json({ message : 'Server error'});
-        }
+router.post('/login', async (req, res) => {
+  try {
+    const { success } = loginSchema.safeParse(req.body);
+    if (!success) {
+      return res.status(400).json({ error: 'Invalid input' });
     }
-);
+
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+    res.json({ token, isAdmin: user.isAdmin });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
 
 module.exports = router;
-
