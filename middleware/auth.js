@@ -1,22 +1,27 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+require('dotenv').config();
 
-exports.auth = async ( req, res, next) => {
+const auth = async ( req, res, next) => {
     try {
-        const token = req.header('Authorisation')?.replace('Bearer', '');
+        const token = req.header('Authorization')?.replace('Bearer ', '');
         if(!token){
             return res.status(401).json({message : 'Authentication required'});
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'my-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        const user = User.findById(decoded.userId);
+        const user = await User.findById(decoded.userId);
+
+        console.log(user);
 
         if(!user) {
             return res.status(401).json({
                 message : 'User not found'
             });
         }
+
+        console.log(user);
 
         req.user = user;
         next();
@@ -25,9 +30,17 @@ exports.auth = async ( req, res, next) => {
     }
 };
 
-exports.isAdmin = async ( req, res, next) => {
-    if(req.user.role !== 'admin') {
-        return res.status(403).json({message : 'Admin access required'});
+const adminAuth = async (req, res, next) => {
+    try {
+      await auth(req, res, () => {
+        if (!req.user.isAdmin) {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
+        next();   
+      });
+    } catch (error) {
+      res.status(401).json({ error: 'Authentication failed' });
     }
-    next();
-};
+  };
+
+  module.exports = { auth, adminAuth };
