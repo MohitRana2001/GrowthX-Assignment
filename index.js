@@ -4,7 +4,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const assignmentRoutes = require('./routes/assignments');
 const adminRoutes = require('./routes/admin');
-
+require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT ||8000;
 
@@ -12,10 +12,7 @@ const PORT = process.env.PORT ||8000;
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect('mongodb+srv://ranamohit2051:user123@100xdevs.q5dmy0i.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
+mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.log('Connected to MongoDB');
 }).catch((err) => {
   console.error('MongoDB connection error:', err);

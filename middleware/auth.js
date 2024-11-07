@@ -13,15 +13,11 @@ const auth = async ( req, res, next) => {
 
         const user = await User.findById(decoded.userId);
 
-        console.log(user);
-
         if(!user) {
             return res.status(401).json({
                 message : 'User not found'
             });
         }
-
-        console.log(user);
 
         req.user = user;
         next();
