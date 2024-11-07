@@ -4,8 +4,7 @@ A backend system for managing assignment submissions with user and admin functio
 
 ## Features
 
-- User and Admin authentication (Local + OAuth2)
-- Google and GitHub OAuth integration
+- User and Admin authentication (Local)
 - Assignment submission system
 - Assignment review system (accept/reject)
 - Input validation using Zod
